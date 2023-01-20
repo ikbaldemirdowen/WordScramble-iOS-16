@@ -28,12 +28,17 @@ struct ContentView: View {
                 {
                     ForEach(usedWords, id: \.self)
                     { word in
-                        Text(word)
+                        HStack
+                        {
+                            Image(systemName: "\(word.count).circle.fill")
+                            Text(word)
+                        }
                     }
                 }
             }
             .navigationTitle(rootWord)
         }
+        .onAppear(perform: startTheGame)
     }
     
     func addNewWord()
@@ -41,9 +46,27 @@ struct ContentView: View {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard answer.count > 1 else { return }
         
-        
-        usedWords.insert(answer, at: 0)
+        withAnimation
+        {
+            usedWords.insert(answer, at: 0)
+        }
         newWord = ""
+    }
+    
+    func startTheGame()
+    {
+        //finding the file
+        if let file = Bundle.main.url(forResource: "start", withExtension: "txt")
+        {
+            //parsing the content of the file to a string
+            if let content = try? String(contentsOf: file)
+            {
+                let allWords = content.components(separatedBy: "\n")
+                rootWord = allWords.randomElement() ?? "Error! No word found!"
+                return
+            }
+        }
+        fatalError("Couldn't find the source file for words in the system.")
     }
 }
 
