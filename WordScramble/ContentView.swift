@@ -14,6 +14,11 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var newGamePressed = false
+    @State private var newGameAlertTitle = ""
+    @State private var newGameAlertMessage = ""
+    @State private var allWordss = [String]()
+    @State private var score = 0
     
     var body: some View {
         NavigationStack
@@ -40,7 +45,19 @@ struct ContentView: View {
                     }
                 }
             }
+            .toolbar()
+            {
+                Button("New Game", action: newGame)
+            }
+            .alert(newGameAlertTitle, isPresented: $newGamePressed)
+            {
+                Button("OK") {}
+            } message: {
+                Text(newGameAlertMessage)
+            }
             .navigationTitle(rootWord)
+            Text("Score \(score)")
+                .font(.largeTitle)
         }
         .onAppear(perform: startTheGame)
         .alert(errorTitle, isPresented: $showingError)
@@ -56,7 +73,7 @@ struct ContentView: View {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         //checking the words validity before proceeding
-        guard answer.count > 1 else { return }
+        guard answer.count >= 3 || answer != rootWord else { return }
         guard isOriginal(word: answer) else
         {
             wordError(title: "Not original", message: "You already used \(answer).")
@@ -79,7 +96,9 @@ struct ContentView: View {
         {
             usedWords.insert(answer, at: 0)
         }
+        increaseScore()
         newWord = ""
+        
     }
     
     func startTheGame()
@@ -91,6 +110,7 @@ struct ContentView: View {
             if let content = try? String(contentsOf: file)
             {
                 let allWords = content.components(separatedBy: "\n")
+                allWordss = allWords
                 rootWord = allWords.randomElement() ?? "Error! No word found!"
                 return
             }
@@ -148,6 +168,21 @@ struct ContentView: View {
         errorMessage = message
         errorTitle = title
         showingError = true
+    }
+    
+    func newGame()
+    {
+        newGamePressed = true
+        newGameAlertTitle = "New game started."
+        newGameAlertMessage = "Word has changed. Score resetted."
+        rootWord = allWordss.randomElement() ?? "Error! No word found!"
+        usedWords = [String]()
+        score = 0
+    }
+    
+    func increaseScore()
+    {
+        score += newWord.count
     }
 }
 
